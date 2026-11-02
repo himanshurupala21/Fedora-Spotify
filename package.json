@@ -1,0 +1,21 @@
+{
+  "name": "fedora-spotify-music-player",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "node server/server.js",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "npm --prefix client run build"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "music-metadata": "^7.14.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
