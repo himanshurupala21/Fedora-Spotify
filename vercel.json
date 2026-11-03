@@ -1,0 +1,18 @@
+{
+  "buildCommand": "node scripts/build-static-data.js && npm --prefix client run build",
+  "outputDirectory": "client/dist",
+  "rewrites": [
+    {
+      "source": "/data/:path*",
+      "destination": "/data/:path*"
+    },
+    {
+      "source": "/covers/:path*",
+      "destination": "/covers/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

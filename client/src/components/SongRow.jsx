@@ -103,11 +103,12 @@ export default function SongRow({ song, index, songList = [] }) {
       <div className="flex items-center gap-3 min-w-0 pr-2">
         <div className="relative w-10 h-10 rounded bg-[#282828] overflow-hidden flex-shrink-0 shadow">
           <img
-            src={song.coverUrl}
+            src={song.coverUrl || '/covers/default.svg'}
             alt={song.title}
             className="w-full h-full object-cover"
             onError={(e) => {
-              e.target.style.display = 'none';
+              e.target.onerror = null;
+              e.target.src = '/covers/default.svg';
             }}
           />
           <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">

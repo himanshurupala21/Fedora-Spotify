@@ -83,11 +83,12 @@ export default function Player() {
       <div className="flex items-center gap-3 w-1/4 min-w-[180px] max-w-[300px]">
         <div className="relative group w-14 h-14 rounded overflow-hidden bg-zinc-800 shadow-lg flex-shrink-0">
           <img
-            src={currentSong.coverUrl}
+            src={currentSong.coverUrl || '/covers/default.svg'}
             alt={currentSong.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform"
             onError={(e) => {
-              e.target.style.display = 'none';
+              e.target.onerror = null;
+              e.target.src = '/covers/default.svg';
             }}
           />
         </div>

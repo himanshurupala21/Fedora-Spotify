@@ -175,9 +175,13 @@ export default function RightPanel() {
         <div className="flex-1 overflow-y-auto pr-1 space-y-4">
           <div className="aspect-square w-full rounded-lg overflow-hidden bg-zinc-800 shadow-2xl relative group">
             <img
-              src={currentSong.coverUrl}
+              src={currentSong.coverUrl || '/covers/default.svg'}
               alt={currentSong.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/covers/default.svg';
+              }}
             />
           </div>
 

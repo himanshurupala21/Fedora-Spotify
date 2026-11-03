@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/data/:path*",
+      "destination": "/data/:path*"
+    },
+    {
+      "source": "/covers/:path*",
+      "destination": "/covers/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

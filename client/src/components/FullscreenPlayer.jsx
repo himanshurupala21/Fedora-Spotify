@@ -75,9 +75,13 @@ export default function FullscreenPlayer() {
       <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-10 my-auto max-w-5xl mx-auto w-full">
         <div className="relative w-64 h-64 md:w-96 md:h-96 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 flex-shrink-0 group">
           <img
-            src={currentSong.coverUrl}
+            src={currentSong.coverUrl || '/covers/default.svg'}
             alt={currentSong.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = '/covers/default.svg';
+            }}
           />
         </div>
 

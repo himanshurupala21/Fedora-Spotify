@@ -108,9 +108,13 @@ export default function MainView() {
                   >
                     <div className="w-16 h-16 bg-zinc-800 flex-shrink-0 relative overflow-hidden">
                       <img 
-                        src={song.coverUrl} 
+                        src={song.coverUrl || '/covers/default.svg'} 
                         alt={song.title} 
                         className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/covers/default.svg';
+                        }}
                       />
                     </div>
                     <div className="flex-1 px-3 min-w-0">

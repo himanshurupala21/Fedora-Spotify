@@ -25,11 +25,12 @@ export default function SongCard({ song, songList = [] }) {
       {/* Artwork Container */}
       <div className="relative aspect-square w-full rounded-md overflow-hidden bg-[#242424] shadow-md">
         <img
-          src={song.coverUrl}
+          src={song.coverUrl || '/covers/default.svg'}
           alt={song.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
-            e.target.style.display = 'none';
+            e.target.onerror = null;
+            e.target.src = '/covers/default.svg';
           }}
         />
         {/* Play Button Overlay */}
