@@ -48,8 +48,7 @@ export default function SongRow({ song, index, songList = [] }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
 
-  const handlePlayClick = (e) => {
-    e.stopPropagation();
+  const handleRowClick = () => {
     if (isCurrent) {
       togglePlay();
     } else {
@@ -70,13 +69,13 @@ export default function SongRow({ song, index, songList = [] }) {
 
   return (
     <div
-      onDoubleClick={() => playSong(song, songList)}
-      className={`group relative grid grid-cols-[16px_4fr_3fr_minmax(120px,1fr)] md:grid-cols-[24px_6fr_4fr_2fr_minmax(100px,1fr)] items-center gap-4 px-4 py-2.5 rounded-md hover:bg-white/10 transition-colors text-sm text-zinc-400 select-none ${
+      onClick={handleRowClick}
+      className={`group relative flex items-center justify-between sm:grid sm:grid-cols-[20px_1fr_auto] md:grid-cols-[24px_6fr_4fr_2fr_minmax(100px,1fr)] gap-2 sm:gap-4 px-2 sm:px-4 py-2 sm:py-2.5 rounded-md hover:bg-white/10 active:bg-white/15 transition-colors text-sm text-zinc-400 select-none cursor-pointer ${
         isCurrent ? 'bg-white/5 text-white' : ''
       }`}
     >
-      {/* 1. Track Index / Playing Indicator / Play Button */}
-      <div className="flex items-center justify-center w-6">
+      {/* 1. Track Index / Playing Indicator / Play Button (Tablet & Desktop) */}
+      <div className="hidden sm:flex items-center justify-center w-6">
         {isPlayingCurrent ? (
           <div className="flex items-end gap-[2px] h-4 w-4">
             <span className="w-1 bg-[#1db954] animate-eq-1 rounded-full inline-block" />
@@ -90,7 +89,10 @@ export default function SongRow({ song, index, songList = [] }) {
               {index + 1}
             </span>
             <button
-              onClick={handlePlayClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRowClick();
+              }}
               className="hidden group-hover:flex items-center justify-center text-white hover:scale-110 transition-transform"
             >
               <Play className="w-4 h-4 fill-white" />
@@ -100,8 +102,8 @@ export default function SongRow({ song, index, songList = [] }) {
       </div>
 
       {/* 2. Song Cover, Title & Artist */}
-      <div className="flex items-center gap-3 min-w-0 pr-2">
-        <div className="relative w-10 h-10 rounded bg-[#282828] overflow-hidden flex-shrink-0 shadow">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+        <div className="relative w-10 h-10 sm:w-10 sm:h-10 rounded bg-[#282828] overflow-hidden flex-shrink-0 shadow">
           <img
             src={song.coverUrl || '/covers/default.svg'}
             alt={song.title}
@@ -111,32 +113,33 @@ export default function SongRow({ song, index, songList = [] }) {
               e.target.src = '/covers/default.svg';
             }}
           />
-          <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-zinc-500">
-            <Music className="w-4 h-4" />
-          </div>
+          {isPlayingCurrent && (
+            <div className="sm:hidden absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="w-2 h-2 rounded-full bg-[#1db954] animate-ping" />
+            </div>
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
           <p
-            onClick={handlePlayClick}
-            className={`font-medium truncate cursor-pointer hover:underline text-sm ${
+            className={`font-semibold truncate text-xs sm:text-sm ${
               isCurrent ? 'text-[#1db954] font-bold' : 'text-white'
             }`}
           >
             {song.title}
           </p>
-          <p className="text-xs text-zinc-400 truncate hover:text-white cursor-pointer transition-colors">
+          <p className="text-[11px] sm:text-xs text-zinc-400 truncate">
             {song.artist}
           </p>
         </div>
       </div>
 
-      {/* 3. Album Column */}
-      <div className="hidden md:block truncate text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer">
+      {/* 3. Album Column (Desktop only) */}
+      <div className="hidden md:block truncate text-xs text-zinc-400 hover:text-white transition-colors">
         {song.album || 'Single'}
       </div>
 
-      {/* 4. Bitrate / Specs */}
+      {/* 4. Bitrate / Format (Desktop only) */}
       <div className="hidden md:flex items-center text-xs text-zinc-400">
         <span className="px-1.5 py-0.5 rounded bg-white/5 text-[10px] uppercase font-mono tracking-wider">
           {song.bitrate ? `${song.bitrate} kbps` : 'MP3'}
@@ -144,25 +147,25 @@ export default function SongRow({ song, index, songList = [] }) {
       </div>
 
       {/* 5. Like Heart, Duration & Options Menu */}
-      <div className="flex items-center justify-end gap-3 text-xs">
+      <div className="flex items-center justify-end gap-1.5 sm:gap-3 text-xs flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         {/* Heart / Favorite Button */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             toggleFavorite(song.id);
           }}
-          className={`transition-all ${
+          className={`p-1.5 transition-all ${
             liked 
               ? 'text-[#1db954] opacity-100' 
-              : 'text-zinc-500 opacity-0 group-hover:opacity-100 hover:text-white'
+              : 'text-zinc-500 opacity-80 sm:opacity-0 group-hover:opacity-100 hover:text-white'
           }`}
           title={liked ? 'Remove from Your Library' : 'Save to Your Library'}
         >
           <Heart className={`w-4 h-4 ${liked ? 'fill-[#1db954]' : ''}`} />
         </button>
 
-        {/* Duration */}
-        <span className="tabular-nums text-zinc-400 min-w-[36px] text-right">
+        {/* Duration (Tablet & Desktop) */}
+        <span className="hidden sm:inline-block tabular-nums text-zinc-400 min-w-[36px] text-right">
           {formatTime(song.duration)}
         </span>
 
@@ -173,7 +176,7 @@ export default function SongRow({ song, index, songList = [] }) {
               e.stopPropagation();
               setIsMenuOpen(prev => !prev);
             }}
-            className="p-1 text-zinc-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-white/10"
+            className="p-1.5 text-zinc-400 sm:text-zinc-500 hover:text-white opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-white/10"
             title="More options"
           >
             <MoreHorizontal className="w-4 h-4" />
@@ -215,7 +218,7 @@ export default function SongRow({ song, index, songList = [] }) {
                 </button>
 
                 {showPlaylistSubmenu && (
-                  <div className="absolute left-full top-0 w-44 bg-[#282828] border border-white/10 rounded-lg shadow-2xl py-1 z-50">
+                  <div className="absolute right-full top-0 sm:left-full sm:right-auto w-44 bg-[#282828] border border-white/10 rounded-lg shadow-2xl py-1 z-50">
                     {playlists.length === 0 ? (
                       <div className="px-3 py-2 text-zinc-500 text-[11px]">No playlists yet</div>
                     ) : (
@@ -255,4 +258,3 @@ export default function SongRow({ song, index, songList = [] }) {
     </div>
   );
 }
-

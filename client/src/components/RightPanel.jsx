@@ -120,8 +120,15 @@ export default function RightPanel() {
   if (!rightPanelTab || !currentSong) return null;
 
   return (
-    <aside className="w-80 bg-[#121212] rounded-lg p-4 my-2 mr-2 flex flex-col gap-4 border border-white/5 shadow-2xl overflow-hidden select-none">
-      {/* Top Header / Switcher */}
+    <>
+      {/* Mobile/Tablet Backdrop (< lg) */}
+      <div 
+        onClick={handleClose}
+        className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+      />
+
+      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-80 lg:relative lg:inset-auto lg:z-auto bg-[#121212] lg:rounded-lg p-4 lg:my-2 lg:mr-2 flex flex-col gap-4 border-l lg:border border-white/10 shadow-2xl overflow-hidden select-none animate-in slide-in-from-right duration-200">
+        {/* Top Header / Switcher */}
       <div className="flex items-center justify-between pb-2 border-b border-white/10 text-xs">
         <div className="flex items-center gap-2">
           <button
@@ -374,7 +381,8 @@ export default function RightPanel() {
           </div>
         </div>
       )}
-    </aside>
+      </aside>
+    </>
   );
 }
 

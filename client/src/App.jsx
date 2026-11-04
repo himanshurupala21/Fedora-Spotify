@@ -5,6 +5,7 @@ import TopNav from './components/TopNav';
 import MainView from './components/MainView';
 import RightPanel from './components/RightPanel';
 import Player from './components/Player';
+import MobileNav from './components/MobileNav';
 import UploadModal from './components/UploadModal';
 import PlaylistModal from './components/PlaylistModal';
 import EqualizerModal from './components/EqualizerModal';
@@ -15,11 +16,11 @@ function MusicPlayerApp() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-black text-white select-none">
       {/* Upper Area: Sidebar + Main Content + Right Panel */}
       <div className="flex-1 flex overflow-hidden min-h-0">
-        {/* Left Sidebar */}
+        {/* Left Sidebar (Desktop/Tablet) */}
         <Sidebar />
 
-        {/* Center Main Stage */}
-        <main className="flex-1 flex flex-col bg-[#121212] rounded-lg my-2 mr-2 overflow-hidden border border-white/5 relative">
+        {/* Center Main Content */}
+        <main className="flex-1 flex flex-col bg-[#121212] m-0 md:my-2 md:mr-2 rounded-none md:rounded-lg overflow-hidden border-0 md:border border-white/5 relative">
           <TopNav />
           <MainView />
         </main>
@@ -28,10 +29,13 @@ function MusicPlayerApp() {
         <RightPanel />
       </div>
 
-      {/* Bottom Sticky Player Bar */}
+      {/* Bottom Audio Player Bar */}
       <Player />
 
-      {/* Modals & Overlays */}
+      {/* Mobile Navigation Bar (Home / Search / Library / Upload) */}
+      <MobileNav />
+
+      {/* Modals & Fullscreen Player */}
       <UploadModal />
       <PlaylistModal />
       <EqualizerModal />

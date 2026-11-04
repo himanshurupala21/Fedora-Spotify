@@ -79,3 +79,4 @@ export async function deleteUploadedSongFromDB(id) {
     console.error('Error deleting from IndexedDB:', err);
   }
 }
+

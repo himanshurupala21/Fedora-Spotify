@@ -43,7 +43,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-black flex flex-col gap-2 p-2 select-none h-full text-zinc-400 text-sm font-medium">
+    <aside className="hidden md:flex w-60 lg:w-64 bg-black flex-col gap-2 p-2 select-none h-full text-zinc-400 text-sm font-medium flex-shrink-0">
       {/* Top Main Navigation Box */}
       <div className="bg-[#121212] rounded-lg p-4 flex flex-col gap-4">
         {/* Brand Header */}

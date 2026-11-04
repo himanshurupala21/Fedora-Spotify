@@ -10,7 +10,8 @@ import {
   Repeat, 
   Repeat1, 
   Volume2, 
-  VolumeX 
+  VolumeX,
+  ChevronDown
 } from 'lucide-react';
 import { useMusic } from '../context/MusicContext';
 import { formatTime } from '../utils/formatters';
@@ -45,35 +46,43 @@ export default function FullscreenPlayer() {
   const liked = isFavorite(currentSong.id);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black text-white flex flex-col justify-between p-8 md:p-14 select-none overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 bg-black text-white flex flex-col justify-between p-4 sm:p-8 md:p-14 select-none overflow-hidden animate-in fade-in duration-300">
       {/* Blurred Album Art Background Glow */}
       <div 
-        className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-25 scale-125 pointer-events-none transition-all duration-700"
-        style={{ backgroundImage: `url(${currentSong.coverUrl})` }}
+        className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-30 scale-125 pointer-events-none transition-all duration-700"
+        style={{ backgroundImage: `url(${currentSong.coverUrl || '/covers/default.svg'})` }}
       />
-      <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/65 pointer-events-none" />
 
       {/* Top Bar */}
       <div className="relative z-10 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#1db954] animate-ping" />
-          <span className="text-xs uppercase tracking-widest text-zinc-400 font-bold">
-            Playing from Fedora Library • {currentSong.album || 'Single'}
+        <button
+          onClick={() => setIsFullscreen(false)}
+          className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white hover:scale-105"
+          title="Minimize Player"
+        >
+          <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+
+        <div className="flex items-center gap-2 max-w-[200px] sm:max-w-md truncate">
+          <span className="w-2 h-2 rounded-full bg-[#1db954] animate-ping flex-shrink-0" />
+          <span className="text-[10px] sm:text-xs uppercase tracking-widest text-zinc-300 font-bold truncate">
+            {currentSong.album || 'Fedora Tunes'}
           </span>
         </div>
 
         <button
           onClick={() => setIsFullscreen(false)}
-          className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white hover:scale-105"
+          className="hidden sm:block p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all text-white hover:scale-105"
           title="Exit Fullscreen (Esc)"
         >
-          <Minimize2 className="w-6 h-6" />
+          <Minimize2 className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </div>
 
       {/* Center Artwork & Visual Presence */}
-      <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-10 my-auto max-w-5xl mx-auto w-full">
-        <div className="relative w-64 h-64 md:w-96 md:h-96 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 flex-shrink-0 group">
+      <div className="relative z-10 flex flex-col md:flex-row items-center justify-center gap-6 sm:gap-10 my-auto max-w-4xl mx-auto w-full">
+        <div className="relative w-52 h-52 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-96 lg:h-96 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10 flex-shrink-0 group">
           <img
             src={currentSong.coverUrl || '/covers/default.svg'}
             alt={currentSong.title}
@@ -85,109 +94,114 @@ export default function FullscreenPlayer() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 text-center md:text-left min-w-0 flex-1">
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight truncate drop-shadow-md">
+        <div className="flex flex-col gap-2 sm:gap-4 text-center md:text-left min-w-0 flex-1 px-2">
+          <h1 className="text-xl sm:text-3xl md:text-5xl font-black text-white tracking-tight truncate drop-shadow-md">
             {currentSong.title}
           </h1>
-          <p className="text-xl md:text-2xl text-zinc-300 font-medium truncate">
+          <p className="text-sm sm:text-xl md:text-2xl text-zinc-300 font-medium truncate">
             {currentSong.artist}
           </p>
-          <p className="text-sm text-zinc-400">
-            {currentSong.genre || 'Music'} • {currentSong.bitrate ? `${currentSong.bitrate} kbps` : '320 kbps'} • High Definition
+          <p className="text-xs sm:text-sm text-zinc-400">
+            {currentSong.genre || 'Music'} • {currentSong.bitrate ? `${currentSong.bitrate} kbps` : 'High Quality Audio'}
           </p>
         </div>
       </div>
 
       {/* Bottom Controls */}
-      <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col gap-4">
+      <div className="relative z-10 max-w-2xl mx-auto w-full flex flex-col gap-3 sm:gap-4 pb-2 sm:pb-0">
         {/* Scrubber */}
-        <div className="flex items-center gap-3 text-xs text-zinc-400 font-semibold tabular-nums">
-          <span>{formatTime(currentTime)}</span>
+        <div className="flex items-center gap-2.5 sm:gap-3 text-[11px] sm:text-xs text-zinc-400 font-semibold tabular-nums">
+          <span className="w-9 text-right">{formatTime(currentTime)}</span>
           <div 
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const pos = (e.clientX - rect.left) / rect.width;
               seekTo(pos * duration);
             }}
-            className="flex-1 h-2 bg-white/20 hover:h-2.5 rounded-full overflow-hidden cursor-pointer relative group transition-all"
+            className="flex-1 h-2 sm:h-2.5 bg-white/20 hover:h-3 rounded-full overflow-hidden cursor-pointer relative group transition-all"
           >
             <div 
               className="h-full bg-[#1db954] rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-          <span>{formatTime(duration)}</span>
+          <span className="w-9 text-left">{formatTime(duration)}</span>
         </div>
 
         {/* Buttons Row */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-2">
           <button
             onClick={() => toggleFavorite(currentSong.id)}
-            className={`p-2 transition-transform hover:scale-110 ${
+            className={`p-2 transition-transform active:scale-95 ${
               liked ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'
             }`}
           >
             <Heart className={`w-6 h-6 ${liked ? 'fill-[#1db954]' : ''}`} />
           </button>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
             <button
               onClick={toggleShuffle}
-              className={`p-2 transition-colors ${isShuffle ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'}`}
+              className={`p-1.5 transition-colors ${isShuffle ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'}`}
             >
-              <Shuffle className="w-5 h-5" />
+              <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
             <button
               onClick={playPrevious}
-              className="text-zinc-300 hover:text-white transition-colors"
+              className="text-zinc-300 hover:text-white transition-colors p-1"
             >
-              <SkipBack className="w-7 h-7 fill-current" />
+              <SkipBack className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
             </button>
 
             <button
               onClick={togglePlay}
-              className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl shadow-white/20"
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-2xl shadow-white/20"
             >
               {isPlaying ? (
-                <Pause className="w-8 h-8 fill-black" />
+                <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-black" />
               ) : (
-                <Play className="w-8 h-8 fill-black ml-1" />
+                <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-black ml-1" />
               )}
             </button>
 
             <button
               onClick={playNext}
-              className="text-zinc-300 hover:text-white transition-colors"
+              className="text-zinc-300 hover:text-white transition-colors p-1"
             >
-              <SkipForward className="w-7 h-7 fill-current" />
+              <SkipForward className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
             </button>
 
             <button
               onClick={toggleRepeat}
-              className={`p-2 transition-colors ${repeatMode !== 'off' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'}`}
+              className={`p-1.5 transition-colors ${repeatMode !== 'off' ? 'text-[#1db954]' : 'text-zinc-400 hover:text-white'}`}
             >
-              {repeatMode === 'one' ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
+              {repeatMode === 'one' ? (
+                <Repeat1 className="w-4 h-4 sm:w-5 sm:h-5" />
+              ) : (
+                <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
+              )}
             </button>
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={toggleMute} className="text-zinc-400 hover:text-white">
+            <button onClick={toggleMute} className="text-zinc-400 hover:text-white p-1">
               {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => setVolumeLevel(parseFloat(e.target.value))}
-              className="w-24 h-1.5 rounded-full bg-zinc-700 accent-[#1db954]"
-            />
+            <div className="hidden sm:block w-20">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => setVolumeLevel(parseFloat(e.target.value))}
+                className="w-full h-1.5 rounded-full bg-zinc-700 accent-[#1db954]"
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
