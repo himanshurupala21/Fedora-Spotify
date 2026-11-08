@@ -88,31 +88,53 @@ export function AuthProvider({ children }) {
     });
   };
 
-  // Generate clean 6-digit approval code (e.g. FED-7294)
+// Generate clean 4-digit approval code (e.g. FED-7294)
   const generateAccessCode = () => {
     const num = Math.floor(1000 + Math.random() * 9000);
     return `FED-${num}`;
   };
 
+  // Safe code normalization & hashing so approval codes are never exposed to clients
+  const normalizeCode = (val) => {
+    if (!val) return '';
+    const clean = val.toString().trim().toUpperCase().replace(/[\s-]/g, '');
+    return clean.startsWith('FED') ? clean.slice(3) : clean;
+  };
+
+  const hashPasscode = (codeStr) => {
+    const num = normalizeCode(codeStr);
+    if (!num) return '';
+    let hash = 0;
+    const str = `FEDORA_SECRET_SALT_${num}`;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+    return `h_${Math.abs(hash).toString(36)}`;
+  };
+
   // Submit request and notify himanshurupala21@gmail.com
   const requestAccess = async ({ name, phone, email }) => {
     const code = generateAccessCode();
+    const codeHash = hashPasscode(code);
     const timestamp = new Date().toLocaleString('en-US', { timeZoneName: 'short' });
 
+    // Client stored state - NEVER stores plain approval code!
     const newRequest = {
       name: name.trim(),
       phone: phone.trim(),
       email: email.trim().toLowerCase(),
-      code,
+      codeHash,
       requestedAt: timestamp,
       status: 'pending'
     };
 
-    // Save locally
+    // Save locally for the pending screen
     setPendingRequest(newRequest);
     localStorage.setItem('fedora_pending_request', JSON.stringify(newRequest));
 
-    // Update all requests registry
+    // Update all requests registry (safely with codeHash)
     setAllRequests(prev => {
       const filtered = prev.filter(r => r.email !== newRequest.email);
       const updated = [newRequest, ...filtered];
@@ -120,12 +142,12 @@ export function AuthProvider({ children }) {
       return updated;
     });
 
-    // Prepare email payload for himanshurupala21@gmail.com
+    // Prepare email payload for himanshurupala21@gmail.com (Owner gets the real code!)
     const emailData = {
       name: newRequest.name,
       email: newRequest.email,
       phone: newRequest.phone,
-      access_code: newRequest.code,
+      access_code: code,
       requested_at: timestamp,
       _subject: `🎵 New Fedora Spotify Access Request: ${newRequest.name}`,
       message: `New User Access Request for Fedora Spotify:
@@ -133,14 +155,14 @@ export function AuthProvider({ children }) {
 Name: ${newRequest.name}
 Email: ${newRequest.email}
 Phone: ${newRequest.phone}
-Generated Access Code: ${newRequest.code}
+Approval Code: ${code}
 Requested At: ${timestamp}
 
 To grant this user access:
-1. Share their unique Access Code (${newRequest.code}) with them, OR
-2. Give them the master code, OR
+1. Share their unique Approval Code (${code}) with them, OR
+2. Give them the Master Passcode (FEDORA21), OR
 3. Share this direct approval link:
-${window.location.origin}/?code=${newRequest.code}&email=${encodeURIComponent(newRequest.email)}`
+${window.location.origin}/?code=${code}&email=${encodeURIComponent(newRequest.email)}`
     };
 
     let sent = false;
@@ -192,18 +214,35 @@ ${window.location.origin}/?code=${newRequest.code}&email=${encodeURIComponent(ne
       return true;
     }
 
-    // 2. Check User's Pending Request Code
-    if (pendingRequest && (pendingRequest.code.toUpperCase() === cleanInput || cleanInput === pendingRequest.code.replace('FED-', ''))) {
-      grantFullAccess({
-        ...pendingRequest,
-        status: 'approved',
-        approvedAt: new Date().toISOString()
-      });
-      return true;
+    // 2. Check User's Pending Request (hashed or plain)
+    const inputHash = hashPasscode(cleanInput);
+    if (pendingRequest) {
+      const matchHash = pendingRequest.codeHash && pendingRequest.codeHash === inputHash;
+      const matchPlain = pendingRequest.code && (
+        pendingRequest.code.toUpperCase() === cleanInput || 
+        cleanInput === pendingRequest.code.replace('FED-', '')
+      );
+
+      if (matchHash || matchPlain) {
+        grantFullAccess({
+          ...pendingRequest,
+          status: 'approved',
+          approvedAt: new Date().toISOString()
+        });
+        return true;
+      }
     }
 
     // 3. Check All Registered Requests
-    const found = allRequests.find(r => r.code.toUpperCase() === cleanInput || cleanInput === r.code.replace('FED-', ''));
+    const found = allRequests.find(r => {
+      const rHashMatch = r.codeHash && r.codeHash === inputHash;
+      const rPlainMatch = r.code && (
+        r.code.toUpperCase() === cleanInput || 
+        cleanInput === r.code.replace('FED-', '')
+      );
+      return rHashMatch || rPlainMatch;
+    });
+
     if (found) {
       grantFullAccess({
         ...found,

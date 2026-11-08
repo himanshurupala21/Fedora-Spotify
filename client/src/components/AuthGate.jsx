@@ -22,8 +22,7 @@ export default function AuthGate() {
     requestAccess, 
     verifyAccessCode, 
     adminLogin, 
-    pendingRequest, 
-    ownerEmail 
+    pendingRequest 
   } = useAuth();
 
   // Mode: 'form' | 'pending' | 'enter_code' | 'admin'
@@ -211,7 +210,7 @@ export default function AuthGate() {
 
                 {/* Notice text */}
                 <p className="text-[11px] text-zinc-400 text-center pt-1">
-                  Requests are sent directly to <span className="text-white font-medium">{ownerEmail}</span>
+                  Requests are sent directly to the Admin for approval
                 </p>
 
                 {/* Submit button */}
@@ -261,7 +260,7 @@ export default function AuthGate() {
                 </div>
                 <h2 className="text-xl font-bold text-white">Access Request Pending</h2>
                 <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-                  Your request has been delivered to <span className="text-white font-semibold">{ownerEmail}</span>.
+                  Your request has been delivered to the Admin for approval.
                 </p>
               </div>
 
@@ -280,8 +279,10 @@ export default function AuthGate() {
                   <span className="text-white font-medium">{pendingRequest.email}</span>
                 </div>
                 <div className="flex justify-between text-zinc-400 border-t border-white/5 pt-1.5">
-                  <span>Your Request ID</span>
-                  <span className="text-[#1db954] font-mono font-bold">{pendingRequest.code}</span>
+                  <span>Status</span>
+                  <span className="text-amber-400 font-semibold flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 animate-spin-slow" /> Pending Approval
+                  </span>
                 </div>
               </div>
 
@@ -295,7 +296,7 @@ export default function AuthGate() {
               <form onSubmit={handleCodeSubmit} className="space-y-3">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-zinc-400">
-                    Received Approval Code from Owner?
+                    Received Approval Code from Admin?
                   </label>
                   <div className="relative group">
                     <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-[#1db954]" />
@@ -403,7 +404,7 @@ export default function AuthGate() {
                 </div>
                 <h2 className="text-2xl font-black text-white">Owner Sign-in</h2>
                 <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-                  Welcome Himanshu. Enter your admin PIN to access Fedora Spotify and approve users.
+                  Enter your admin security PIN to unlock the master player and permissions dashboard.
                 </p>
               </div>
 

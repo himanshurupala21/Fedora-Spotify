@@ -15,7 +15,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminManagerModal({ isOpen, onClose }) {
-  const { allRequests, adminApproveUser, adminRevokeUser, ownerEmail } = useAuth();
+  const { allRequests, adminApproveUser, adminRevokeUser } = useAuth();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -42,7 +42,7 @@ export default function AdminManagerModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="font-bold text-lg text-white">Access Requests & Admin</h2>
-              <p className="text-xs text-zinc-400">Managing user permissions for {ownerEmail}</p>
+              <p className="text-xs text-zinc-400">Manage user access requests & permissions</p>
             </div>
           </div>
 
