@@ -506,6 +506,42 @@ app.get('/api/stats', async (req, res) => {
   });
 });
 
+// 9. Access Requests Management
+const ACCESS_REQUESTS_FILE = path.join(DATA_DIR, 'access_requests.json');
+let accessRequests = readJson(ACCESS_REQUESTS_FILE, []);
+
+app.post('/api/request-access', (req, res) => {
+  const { name, email, phone, access_code, requested_at } = req.body;
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: 'Name, email, and phone are required' });
+  }
+
+  const newEntry = {
+    name,
+    email: email.toLowerCase(),
+    phone,
+    code: access_code || `FED-${Math.floor(1000 + Math.random() * 9000)}`,
+    requestedAt: requested_at || new Date().toISOString(),
+    status: 'pending'
+  };
+
+  accessRequests = [newEntry, ...accessRequests.filter(r => r.email !== newEntry.email)];
+  writeJson(ACCESS_REQUESTS_FILE, accessRequests);
+
+  console.log(`\n🔔 [NEW ACCESS REQUEST]`);
+  console.log(`👤 Name: ${newEntry.name}`);
+  console.log(`📧 Email: ${newEntry.email}`);
+  console.log(`📞 Phone: ${newEntry.phone}`);
+  console.log(`🔑 Access Code: ${newEntry.code}`);
+  console.log(`✉️ Notification targeted for: himanshurupala21@gmail.com\n`);
+
+  res.json({ success: true, request: newEntry });
+});
+
+app.get('/api/access-requests', (req, res) => {
+  res.json({ success: true, requests: accessRequests });
+});
+
 // Serve Vite React build if available
 const DIST_DIR = path.join(ROOT_DIR, 'client', 'dist');
 if (fs.existsSync(DIST_DIR)) {
