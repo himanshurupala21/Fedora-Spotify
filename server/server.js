@@ -542,6 +542,135 @@ app.get('/api/access-requests', (req, res) => {
   res.json({ success: true, requests: accessRequests });
 });
 
+// 10. User Profiles Management
+const PROFILES_FILE = path.join(DATA_DIR, 'profiles.json');
+let userProfiles = readJson(PROFILES_FILE, [
+  {
+    id: 'owner_1',
+    name: 'Himanshu Rupala',
+    email: 'himanshurupala21@gmail.com',
+    phone: 'Owner',
+    role: 'owner',
+    status: 'approved',
+    approvedAt: new Date().toISOString(),
+    lastLoginAt: new Date().toISOString()
+  }
+]);
+
+// Helper: Smart Name, Phone, and Email matchers
+function matchName(n1, n2) {
+  if (!n1 || !n2) return false;
+  const clean1 = n1.toString().trim().toLowerCase().replace(/\s+/g, ' ');
+  const clean2 = n2.toString().trim().toLowerCase().replace(/\s+/g, ' ');
+  return clean1 === clean2 || clean1.includes(clean2) || clean2.includes(clean1);
+}
+
+function matchPhone(p1, p2) {
+  if (!p1 || !p2) return false;
+  const d1 = p1.toString().replace(/\D/g, '');
+  const d2 = p2.toString().replace(/\D/g, '');
+  if (!d1 || !d2) return false;
+  if (d1 === d2) return true;
+  // Match last 10 digits for mobile numbers
+  if (d1.length >= 10 && d2.length >= 10) {
+    return d1.slice(-10) === d2.slice(-10);
+  }
+  return false;
+}
+
+function matchEmail(e1, e2) {
+  if (!e1 || !e2) return false;
+  return e1.toString().trim().toLowerCase() === e2.toString().trim().toLowerCase();
+}
+
+function matchIdentifier(userPhone, userEmail, queryIdentifier) {
+  if (!queryIdentifier) return false;
+  return matchPhone(userPhone, queryIdentifier) || matchEmail(userEmail, queryIdentifier);
+}
+
+// User Profile Login: Login with Name and Number OR Email
+app.post('/api/profiles/login', (req, res) => {
+  const { name, identifier } = req.body;
+  if (!name || !identifier) {
+    return res.status(400).json({ success: false, error: 'Name and Phone/Email are required' });
+  }
+
+  // 1. Check approved profiles
+  const profile = userProfiles.find(p => {
+    return matchName(p.name, name) && matchIdentifier(p.phone, p.email, identifier);
+  });
+
+  if (profile) {
+    profile.lastLoginAt = new Date().toISOString();
+    writeJson(PROFILES_FILE, userProfiles);
+    return res.json({ success: true, profile });
+  }
+
+  // 2. Check if pending in access requests
+  const pending = accessRequests.find(r => {
+    return matchName(r.name, name) && matchIdentifier(r.phone, r.email, identifier);
+  });
+
+  if (pending && pending.status !== 'approved') {
+    return res.json({ 
+      success: false, 
+      status: 'pending', 
+      error: `Access request for ${pending.name} is currently awaiting admin approval.` 
+    });
+  }
+
+  res.json({ 
+    success: false, 
+    status: 'not_found', 
+    error: 'No approved profile found matching these details. Please submit an access request or enter your approval code.' 
+  });
+});
+
+// Register / Upsert Approved Profile
+app.post('/api/profiles/register', (req, res) => {
+  const { name, phone, email, role, avatarColor } = req.body;
+  if (!name || (!phone && !email)) {
+    return res.status(400).json({ error: 'Name and Phone/Email required' });
+  }
+
+  const cleanEmail = (email || '').toLowerCase().trim();
+  const cleanPhone = (phone || '').trim();
+
+  let existing = userProfiles.find(p => 
+    (cleanEmail && p.email && p.email.toLowerCase() === cleanEmail) ||
+    (cleanPhone && cleanIdentifier(p.phone) === cleanIdentifier(cleanPhone))
+  );
+
+  if (existing) {
+    existing.name = name.trim();
+    if (cleanPhone) existing.phone = cleanPhone;
+    if (cleanEmail) existing.email = cleanEmail;
+    existing.status = 'approved';
+    existing.lastLoginAt = new Date().toISOString();
+  } else {
+    existing = {
+      id: `usr_${Date.now()}`,
+      name: name.trim(),
+      phone: cleanPhone,
+      email: cleanEmail,
+      role: role || 'member',
+      status: 'approved',
+      avatarColor: avatarColor || 'from-emerald-500 to-green-400',
+      approvedAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
+    };
+    userProfiles.push(existing);
+  }
+
+  writeJson(PROFILES_FILE, userProfiles);
+  res.json({ success: true, profile: existing });
+});
+
+// Get all profiles for Admin
+app.get('/api/profiles', (req, res) => {
+  res.json({ success: true, profiles: userProfiles });
+});
+
 // Serve Vite React build if available
 const DIST_DIR = path.join(ROOT_DIR, 'client', 'dist');
 if (fs.existsSync(DIST_DIR)) {

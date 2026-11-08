@@ -12,7 +12,8 @@ import {
   ArrowRight, 
   Sparkles,
   AlertCircle,
-  ExternalLink,
+  LogIn,
+  UserPlus,
   ChevronLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -20,17 +21,24 @@ import { useAuth } from '../context/AuthContext';
 export default function AuthGate() {
   const { 
     requestAccess, 
+    loginWithProfile,
     verifyAccessCode, 
     adminLogin, 
-    pendingRequest 
+    pendingRequest,
+    userProfiles = []
   } = useAuth();
 
-  // Mode: 'form' | 'pending' | 'enter_code' | 'admin'
+  // Mode: 'login' | 'form' | 'pending' | 'enter_code' | 'admin'
   const [mode, setMode] = useState(() => {
-    return pendingRequest ? 'pending' : 'form';
+    if (pendingRequest) return 'pending';
+    return userProfiles.length > 0 ? 'login' : 'form';
   });
 
-  // Form fields
+  // Login form fields (Name + Phone or Email)
+  const [loginName, setLoginName] = useState('');
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+
+  // Request Access Form fields
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -46,10 +54,41 @@ export default function AuthGate() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Handle User Profile Login (Name + Phone or Email)
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!loginName.trim() || !loginIdentifier.trim()) {
+      setErrorMessage('Please enter both your Name and registered Phone or Email.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await loginWithProfile({
+        name: loginName,
+        identifier: loginIdentifier
+      });
+
+      if (!res.success) {
+        setErrorMessage(res.error || 'No approved profile found matching these credentials.');
+      } else {
+        setSuccessMessage(`Welcome back, ${res.profile?.name || loginName}! Unlocking player...`);
+      }
+    } catch (err) {
+      setErrorMessage(err.message || 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Handle Request Access Submission
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
     
     if (!name.trim() || !phone.trim() || !email.trim()) {
       setErrorMessage('Please fill in all fields (Name, Phone number, and Email).');
@@ -70,7 +109,7 @@ export default function AuthGate() {
         setTimeout(() => {
           setMode('pending');
           setSuccessMessage('');
-        }, 1000);
+        }, 800);
       }
     } catch (err) {
       setErrorMessage(err.message || 'Failed to submit request. Please try again.');
@@ -85,7 +124,7 @@ export default function AuthGate() {
     setErrorMessage('');
 
     if (!accessCode.trim()) {
-      setErrorMessage('Please enter your 6-digit access code.');
+      setErrorMessage('Please enter your approval code.');
       return;
     }
 
@@ -129,35 +168,170 @@ export default function AuthGate() {
 
       {/* Central Glass Card */}
       <div className="relative z-10 w-full max-w-md my-auto py-6">
-        <div className="bg-[#181818]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6">
+        <div className="bg-[#181818]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-5">
 
-          {/* ================= 1. REQUEST ACCESS FORM ================= */}
-          {mode === 'form' && (
+          {/* Top Segmented Tab Switcher (Visible in Login & Form modes) */}
+          {(mode === 'login' || mode === 'form') && (
+            <div className="flex bg-[#242424] p-1 rounded-2xl border border-white/5">
+              <button
+                type="button"
+                onClick={() => { setMode('login'); setErrorMessage(''); setSuccessMessage(''); }}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  mode === 'login' 
+                    ? 'bg-[#1db954] text-black shadow-md' 
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Log In</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode('form'); setErrorMessage(''); setSuccessMessage(''); }}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  mode === 'form' 
+                    ? 'bg-[#1db954] text-black shadow-md' 
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Request Access</span>
+              </button>
+            </div>
+          )}
+
+          {/* Error & Success Messages */}
+          {errorMessage && (
+            <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-xl flex items-center gap-2.5 text-xs text-red-300 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="bg-[#1db954]/10 border border-[#1db954]/30 p-3 rounded-xl flex items-center gap-2.5 text-xs text-[#1db954] animate-in fade-in">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+
+          {/* ================= 1. USER PROFILE LOGIN (Name + Phone or Email) ================= */}
+          {mode === 'login' && (
             <>
-              <div className="text-center space-y-1.5">
-                <div className="inline-flex items-center gap-1.5 bg-[#1db954]/10 border border-[#1db954]/25 text-[#1db954] px-3 py-1 rounded-full text-[11px] font-bold tracking-wide uppercase mb-1">
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Private Access Only</span>
-                </div>
-                <h1 className="text-2xl font-black tracking-tight text-white">Request Access</h1>
+              <div className="text-center space-y-1">
+                <h1 className="text-2xl font-black tracking-tight text-white">Welcome Back</h1>
                 <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-                  Submit your details below to request access from the owner.
+                  Sign in with your Name and registered Phone Number or Email.
                 </p>
               </div>
 
-              {errorMessage && (
-                <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-xl flex items-center gap-2.5 text-xs text-red-300">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                  <span>{errorMessage}</span>
+              {/* Quick Profile Chips if any exist */}
+              {userProfiles.length > 0 && (
+                <div className="space-y-1.5 bg-[#242424]/60 p-2.5 rounded-2xl border border-white/5">
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block text-center">
+                    Saved Profiles on this Device
+                  </span>
+                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                    {userProfiles.slice(0, 3).map((prof) => (
+                      <button
+                        key={prof.id || prof.email || prof.phone}
+                        type="button"
+                        onClick={() => {
+                          setLoginName(prof.name);
+                          setLoginIdentifier(prof.phone || prof.email || '');
+                        }}
+                        className="bg-[#2a2a2a] hover:bg-[#333333] border border-white/5 hover:border-[#1db954]/40 py-1 px-2.5 rounded-full text-xs flex items-center gap-1.5 text-zinc-200 transition-all active:scale-95"
+                      >
+                        <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-emerald-500 to-green-400 text-black font-black text-[9px] flex items-center justify-center">
+                          {(prof.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="truncate max-w-[110px] font-medium">{prof.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              {successMessage && (
-                <div className="bg-[#1db954]/10 border border-[#1db954]/30 p-3 rounded-xl flex items-center gap-2.5 text-xs text-[#1db954]">
-                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-                  <span>{successMessage}</span>
+              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+                {/* Full Name */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-zinc-400">Your Name</label>
+                  <div className="relative group">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-[#1db954] transition-colors" />
+                    <input
+                      type="text"
+                      required
+                      value={loginName}
+                      onChange={(e) => setLoginName(e.target.value)}
+                      placeholder="e.g. John Doe"
+                      className="w-full bg-[#242424] hover:bg-[#282828] focus:bg-[#282828] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 outline-none border border-transparent focus:border-[#1db954] transition-all"
+                    />
+                  </div>
                 </div>
-              )}
+
+                {/* Phone Number or Email */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-zinc-400">Phone Number or Email</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 group-focus-within:text-[#1db954] transition-colors" />
+                    <input
+                      type="text"
+                      required
+                      value={loginIdentifier}
+                      onChange={(e) => setLoginIdentifier(e.target.value)}
+                      placeholder="e.g. +91 9876543210 or email@domain.com"
+                      className="w-full bg-[#242424] hover:bg-[#282828] focus:bg-[#282828] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 outline-none border border-transparent focus:border-[#1db954] transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Login Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#1db954] hover:bg-[#1ed760] disabled:bg-zinc-700 disabled:text-zinc-500 text-black py-3 rounded-full font-bold text-sm shadow-lg shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 mt-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <span>Verifying Profile...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign In to Profile</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Bottom Switch Links */}
+              <div className="flex flex-col gap-2 pt-2 border-t border-white/5 text-center text-xs text-zinc-400">
+                <button
+                  onClick={() => { setMode('enter_code'); setErrorMessage(''); }}
+                  className="hover:text-white transition-colors"
+                >
+                  Received an Approval Code? <span className="text-[#1db954] font-semibold underline">Enter Code</span>
+                </button>
+                <button
+                  onClick={() => { setMode('admin'); setErrorMessage(''); }}
+                  className="hover:text-zinc-300 transition-colors text-[11px]"
+                >
+                  Owner / Admin Login
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ================= 2. REQUEST ACCESS FORM (New Users) ================= */}
+          {mode === 'form' && (
+            <>
+              <div className="text-center space-y-1">
+                <h1 className="text-2xl font-black tracking-tight text-white">Request Access</h1>
+                <p className="text-xs text-zinc-400 max-w-xs mx-auto">
+                  Submit your details below to request an account and create your profile.
+                </p>
+              </div>
 
               <form onSubmit={handleRequestSubmit} className="space-y-3.5">
                 {/* Full Name */}
@@ -251,7 +425,7 @@ export default function AuthGate() {
             </>
           )}
 
-          {/* ================= 2. PENDING APPROVAL STATE ================= */}
+          {/* ================= 3. PENDING APPROVAL STATE ================= */}
           {mode === 'pending' && pendingRequest && (
             <>
               <div className="text-center space-y-3">
@@ -286,12 +460,6 @@ export default function AuthGate() {
                 </div>
               </div>
 
-              {errorMessage && (
-                <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-xl text-xs text-red-300">
-                  {errorMessage}
-                </div>
-              )}
-
               {/* Access Code Input */}
               <form onSubmit={handleCodeSubmit} className="space-y-3">
                 <div className="space-y-1">
@@ -304,7 +472,7 @@ export default function AuthGate() {
                       type="text"
                       value={accessCode}
                       onChange={(e) => setAccessCode(e.target.value)}
-                      placeholder="Enter 6-digit Code (e.g. FED-1234)"
+                      placeholder="Enter 4-digit Code (e.g. 1234 or FED-1234)"
                       className="w-full bg-[#242424] text-white text-sm rounded-xl pl-10 pr-4 py-2.5 outline-none border border-transparent focus:border-[#1db954] font-mono tracking-wider uppercase"
                     />
                   </div>
@@ -321,10 +489,10 @@ export default function AuthGate() {
 
               <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-zinc-400">
                 <button
-                  onClick={() => { setMode('form'); setErrorMessage(''); }}
+                  onClick={() => { setMode('login'); setErrorMessage(''); }}
                   className="hover:text-white transition-colors"
                 >
-                  ← Edit Request
+                  ← Log In to Profile
                 </button>
                 <button
                   onClick={() => { setMode('admin'); setErrorMessage(''); }}
@@ -336,7 +504,7 @@ export default function AuthGate() {
             </>
           )}
 
-          {/* ================= 3. ENTER ACCESS CODE DIRECTLY ================= */}
+          {/* ================= 4. ENTER ACCESS CODE DIRECTLY ================= */}
           {mode === 'enter_code' && (
             <>
               <div className="text-center space-y-1.5">
@@ -345,15 +513,9 @@ export default function AuthGate() {
                 </div>
                 <h2 className="text-2xl font-black text-white">Enter Access Code</h2>
                 <p className="text-xs text-zinc-400 max-w-xs mx-auto">
-                  Enter the access pass code granted by the admin to unlock the music player.
+                  Enter the approval code granted by the admin to unlock your profile.
                 </p>
               </div>
-
-              {errorMessage && (
-                <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-xl text-xs text-red-300">
-                  {errorMessage}
-                </div>
-              )}
 
               <form onSubmit={handleCodeSubmit} className="space-y-4">
                 <div className="space-y-1">
@@ -364,7 +526,7 @@ export default function AuthGate() {
                     required
                     value={accessCode}
                     onChange={(e) => setAccessCode(e.target.value)}
-                    placeholder="e.g. FED-1234 or Passcode"
+                    placeholder="e.g. 1234 or FED-1234"
                     className="w-full bg-[#242424] text-white text-base rounded-xl px-4 py-3 outline-none border border-transparent focus:border-[#1db954] font-mono tracking-widest text-center uppercase"
                   />
                 </div>
@@ -379,11 +541,11 @@ export default function AuthGate() {
 
               <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs text-zinc-400">
                 <button
-                  onClick={() => { setMode('form'); setErrorMessage(''); }}
+                  onClick={() => { setMode('login'); setErrorMessage(''); }}
                   className="hover:text-white transition-colors flex items-center gap-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>Request Access</span>
+                  <span>Back to Sign In</span>
                 </button>
                 <button
                   onClick={() => { setMode('admin'); setErrorMessage(''); }}
@@ -395,7 +557,7 @@ export default function AuthGate() {
             </>
           )}
 
-          {/* ================= 4. OWNER / ADMIN LOGIN ================= */}
+          {/* ================= 5. OWNER / ADMIN LOGIN ================= */}
           {mode === 'admin' && (
             <>
               <div className="text-center space-y-1.5">
@@ -407,12 +569,6 @@ export default function AuthGate() {
                   Enter your admin security PIN to unlock the master player and permissions dashboard.
                 </p>
               </div>
-
-              {errorMessage && (
-                <div className="bg-red-500/10 border border-red-500/25 p-3 rounded-xl text-xs text-red-300">
-                  {errorMessage}
-                </div>
-              )}
 
               <form onSubmit={handleAdminSubmit} className="space-y-4">
                 <div className="space-y-1">
@@ -438,11 +594,11 @@ export default function AuthGate() {
 
               <div className="text-center pt-2 border-t border-white/5 text-xs text-zinc-400">
                 <button
-                  onClick={() => { setMode('form'); setErrorMessage(''); }}
+                  onClick={() => { setMode('login'); setErrorMessage(''); }}
                   className="hover:text-white transition-colors flex items-center gap-1 mx-auto"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  <span>Back to User Request</span>
+                  <span>Back to Sign In</span>
                 </button>
               </div>
             </>

@@ -15,6 +15,7 @@ import {
 import { useMusic } from '../context/MusicContext';
 import { useAuth } from '../context/AuthContext';
 import AdminManagerModal from './AdminManagerModal';
+import ProfileModal from './ProfileModal';
 
 export default function TopNav() {
   const { 
@@ -31,6 +32,7 @@ export default function TopNav() {
   const { currentUser, isAdmin, logout } = useAuth();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const profileRef = useRef(null);
 
   // Close profile menu on outside click
@@ -161,17 +163,31 @@ export default function TopNav() {
                   </div>
 
                   <div className="py-1 space-y-0.5">
-                    {/* Admin Access Manager link */}
+                    {/* View Profile Button */}
                     <button
                       onClick={() => {
-                        setIsAdminModalOpen(true);
+                        setIsProfileModalOpen(true);
                         setIsProfileMenuOpen(false);
                       }}
                       className="w-full px-3 py-2 text-left rounded-lg flex items-center gap-2 hover:bg-white/10 hover:text-white transition-colors"
                     >
-                      <ShieldCheck className="w-4 h-4 text-[#1db954]" />
-                      <span>Access Requests Manager</span>
+                      <User className="w-4 h-4 text-[#1db954]" />
+                      <span>View My Profile</span>
                     </button>
+
+                    {/* Admin Access Manager link (Admin only) */}
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setIsAdminModalOpen(true);
+                          setIsProfileMenuOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left rounded-lg flex items-center gap-2 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <ShieldCheck className="w-4 h-4 text-[#1db954]" />
+                        <span>Access Requests Manager</span>
+                      </button>
+                    )}
 
                     {/* Lock / Log out */}
                     <button
@@ -210,6 +226,12 @@ export default function TopNav() {
           </div>
         )}
       </header>
+
+      {/* Profile Details Modal */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+      />
 
       {/* Admin Requests Manager Modal */}
       <AdminManagerModal 

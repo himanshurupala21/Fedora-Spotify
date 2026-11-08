@@ -21,6 +21,15 @@ export function AuthProvider({ children }) {
     }
   });
 
+  const [userProfiles, setUserProfiles] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fedora_user_profiles');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [pendingRequest, setPendingRequest] = useState(() => {
     try {
       const saved = localStorage.getItem('fedora_pending_request');
@@ -73,19 +82,157 @@ export function AuthProvider({ children }) {
     window.history.replaceState({}, document.title, url.pathname);
   };
 
+  // Helper: Smart Name, Phone, and Email matchers
+  const matchName = (n1, n2) => {
+    if (!n1 || !n2) return false;
+    const clean1 = n1.toString().trim().toLowerCase().replace(/\s+/g, ' ');
+    const clean2 = n2.toString().trim().toLowerCase().replace(/\s+/g, ' ');
+    return clean1 === clean2 || clean1.includes(clean2) || clean2.includes(clean1);
+  };
+
+  const matchPhone = (p1, p2) => {
+    if (!p1 || !p2) return false;
+    const d1 = p1.toString().replace(/\D/g, '');
+    const d2 = p2.toString().replace(/\D/g, '');
+    if (!d1 || !d2) return false;
+    if (d1 === d2) return true;
+    if (d1.length >= 10 && d2.length >= 10) {
+      return d1.slice(-10) === d2.slice(-10);
+    }
+    return false;
+  };
+
+  const matchEmail = (e1, e2) => {
+    if (!e1 || !e2) return false;
+    return e1.toString().trim().toLowerCase() === e2.toString().trim().toLowerCase();
+  };
+
+  const matchIdentifier = (userPhone, userEmail, queryIdentifier) => {
+    if (!queryIdentifier) return false;
+    return matchPhone(userPhone, queryIdentifier) || matchEmail(userEmail, queryIdentifier);
+  };
+
+  // Register / Persist an approved user profile
+  const saveUserProfile = (profile) => {
+    setUserProfiles(prev => {
+      const pEmail = (profile.email || '').toLowerCase().trim();
+      const filtered = prev.filter(p => {
+        const sameEmail = pEmail && p.email && p.email.toLowerCase().trim() === pEmail;
+        const samePhone = matchPhone(p.phone, profile.phone);
+        return !(sameEmail || samePhone);
+      });
+      const updated = [profile, ...filtered];
+      localStorage.setItem('fedora_user_profiles', JSON.stringify(updated));
+      return updated;
+    });
+
+    // Also sync to backend if reachable
+    try {
+      fetch('/api/profiles/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      }).catch(() => {});
+    } catch {}
+  };
+
   const grantFullAccess = (user) => {
+    const cleanUser = {
+      id: user.id || `usr_${Date.now()}`,
+      name: user.name || 'Authorized Member',
+      phone: user.phone || '',
+      email: user.email || '',
+      role: user.role || 'member',
+      status: 'approved',
+      avatarColor: user.avatarColor || 'from-emerald-500 to-green-400',
+      approvedAt: user.approvedAt || new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
+    };
+
     setIsAuthorized(true);
-    setCurrentUser(user);
+    setCurrentUser(cleanUser);
     localStorage.setItem('fedora_auth_approved', 'true');
-    localStorage.setItem('fedora_auth_user', JSON.stringify(user));
+    localStorage.setItem('fedora_auth_user', JSON.stringify(cleanUser));
     localStorage.removeItem('fedora_pending_request');
     setPendingRequest(null);
+
+    // Save profile to userProfiles registry
+    saveUserProfile(cleanUser);
 
     confetti({
       particleCount: 120,
       spread: 70,
       origin: { y: 0.6 }
     });
+  };
+
+  // Log in with Name and Phone Number OR Email
+  const loginWithProfile = async ({ name, identifier }) => {
+    if (!name || !identifier) {
+      return { success: false, error: 'Please enter both your Name and Phone or Email.' };
+    }
+
+    // 1. Check local userProfiles
+    let found = userProfiles.find(p => {
+      return matchName(p.name, name) && matchIdentifier(p.phone, p.email, identifier);
+    });
+
+    // 2. If not found locally, try checking server backend
+    if (!found) {
+      try {
+        const res = await fetch('/api/profiles/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, identifier })
+        });
+        const data = await res.json();
+        if (data.success && data.profile) {
+          found = data.profile;
+        } else if (data.status === 'pending') {
+          return {
+            success: false,
+            status: 'pending',
+            error: data.error || 'Your access request is currently pending admin approval.'
+          };
+        }
+      } catch {}
+    }
+
+    // 3. If found and approved
+    if (found && (found.status === 'approved' || !found.status)) {
+      grantFullAccess(found);
+      return { success: true, profile: found };
+    }
+
+    // 4. Check if in pendingRequest or allRequests
+    const isPending = (pendingRequest && (
+      matchName(pendingRequest.name, name) && matchIdentifier(pendingRequest.phone, pendingRequest.email, identifier)
+    )) || allRequests.some(r => 
+      r.status === 'pending' && matchName(r.name, name) && matchIdentifier(r.phone, r.email, identifier)
+    );
+
+    if (isPending) {
+      return {
+        success: false,
+        status: 'pending',
+        error: `Your request for "${name}" is awaiting admin approval. Once approved, you can log in directly here!`
+      };
+    }
+
+    return {
+      success: false,
+      status: 'not_found',
+      error: `No approved profile found for "${name}" with this Phone/Email. Click "Request Access" to register.`
+    };
+  };
+
+  // Update current user profile fields (e.g. name, phone, avatar)
+  const updateUserProfile = (updatedFields) => {
+    if (!currentUser) return;
+    const updated = { ...currentUser, ...updatedFields };
+    setCurrentUser(updated);
+    localStorage.setItem('fedora_auth_user', JSON.stringify(updated));
+    saveUserProfile(updated);
   };
 
 // Generate clean 4-digit approval code (e.g. FED-7294)
@@ -313,11 +460,15 @@ ${window.location.origin}/?code=${code}&email=${encodeURIComponent(newRequest.em
       value={{
         isAuthorized,
         currentUser,
+        userProfiles,
         pendingRequest,
         allRequests,
         isAdmin,
         ownerEmail: OWNER_EMAIL,
         requestAccess,
+        loginWithProfile,
+        updateUserProfile,
+        saveUserProfile,
         verifyAccessCode,
         adminLogin,
         adminApproveUser,

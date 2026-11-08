@@ -12,4 +12,5 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 server/data/access_requests.json
+server/data/profiles.json
 
