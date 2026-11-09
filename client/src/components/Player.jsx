@@ -107,11 +107,11 @@ export default function Player() {
             </div>
           </div>
 
-          {/* Right Actions: Like & Play */}
-          <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          {/* Right Actions: Like, Play & Skip Next */}
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => toggleFavorite(currentSong.id)}
-              className={`p-2 transition-transform active:scale-95 ${
+              className={`p-1.5 sm:p-2 transition-transform active:scale-95 ${
                 liked ? 'text-[#1db954]' : 'text-zinc-400'
               }`}
               title={liked ? 'Liked' : 'Like'}
@@ -121,7 +121,7 @@ export default function Player() {
 
             <button
               onClick={togglePlay}
-              className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center active:scale-90 shadow-md ml-1"
+              className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center active:scale-90 shadow-md mx-0.5"
               title={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? (
@@ -129,6 +129,14 @@ export default function Player() {
               ) : (
                 <Play className="w-4 h-4 fill-black ml-0.5" />
               )}
+            </button>
+
+            <button
+              onClick={playNext}
+              className="p-1.5 sm:p-2 text-zinc-300 hover:text-white active:scale-90 transition-transform"
+              title="Next Track"
+            >
+              <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
             </button>
           </div>
         </div>

@@ -98,19 +98,19 @@ export default function TopNav() {
           </div>
 
           {/* Center: Search Bar */}
-          <div className="relative flex-1 max-w-md group">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-white transition-colors pointer-events-none" />
+          <div className="relative flex-1 max-w-md group min-w-0">
+            <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-zinc-400 group-focus-within:text-white transition-colors pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search songs, artists, albums..."
-              className="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] text-white text-xs sm:text-sm rounded-full pl-9 pr-8 py-1.5 sm:py-2 outline-none border border-transparent focus:border-white/20 transition-all placeholder:text-zinc-400 placeholder:text-xs"
+              placeholder="Search songs, artists..."
+              className="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#2a2a2a] text-white text-xs sm:text-sm rounded-full pl-8 sm:pl-9 pr-7 sm:pr-8 py-1.5 sm:py-2 outline-none border border-transparent focus:border-white/20 transition-all placeholder:text-zinc-400 placeholder:text-xs"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-0.5 rounded-full"
+                className="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white p-0.5 rounded-full"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
