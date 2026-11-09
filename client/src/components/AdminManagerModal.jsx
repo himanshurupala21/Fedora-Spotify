@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   ShieldCheck, 
@@ -10,13 +10,29 @@ import {
   Mail, 
   Phone, 
   Clock,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminManagerModal({ isOpen, onClose }) {
-  const { allRequests, adminApproveUser, adminRevokeUser } = useAuth();
+  const { allRequests, adminApproveUser, adminRevokeUser, refreshCloudData } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && refreshCloudData) {
+      refreshCloudData();
+    }
+  }, [isOpen]);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    if (refreshCloudData) {
+      await refreshCloudData();
+    }
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   if (!isOpen) return null;
 
@@ -91,7 +107,17 @@ export default function AdminManagerModal({ isOpen, onClose }) {
         {/* User Requests List */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[200px]">
           <div className="flex items-center justify-between text-xs text-zinc-400 px-1 py-1">
-            <span>User Requests ({allRequests.length})</span>
+            <div className="flex items-center gap-2">
+              <span>User Requests ({allRequests.length})</span>
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                className="hover:text-white p-1 rounded hover:bg-white/5 transition-colors"
+                title="Sync from cloud"
+              >
+                <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-[#1db954]' : ''}`} />
+              </button>
+            </div>
             <span>Status / Actions</span>
           </div>
 

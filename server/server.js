@@ -549,7 +549,7 @@ let userProfiles = readJson(PROFILES_FILE, [
     id: 'owner_1',
     name: 'Himanshu Rupala',
     email: 'himanshurupala21@gmail.com',
-    phone: 'Owner',
+    phone: '9879004729',
     role: 'owner',
     status: 'approved',
     approvedAt: new Date().toISOString(),
@@ -595,7 +595,32 @@ app.post('/api/profiles/login', (req, res) => {
     return res.status(400).json({ success: false, error: 'Name and Phone/Email are required' });
   }
 
-  // 1. Check approved profiles
+  // 1. Owner Login Check
+  const OWNER_NAMES = ['himanshu', 'himanshu rupala', 'rupala', 'admin', 'owner'];
+  const OWNER_PHONES = ['9879004729', '+919879004729', '09879004729'];
+  const OWNER_EMAILS = ['himanshurupala21@gmail.com', 'himanshu@gmail.com'];
+  const ADMIN_PINS = ['2125', 'fedora21', 'himanshu21', '9879004729'];
+
+  const isOwnerName = OWNER_NAMES.some(n => matchName(n, name));
+  const isOwnerId = OWNER_PHONES.some(p => matchPhone(p, identifier)) ||
+                    OWNER_EMAILS.some(e => matchEmail(e, identifier)) ||
+                    ADMIN_PINS.includes(identifier.trim());
+
+  if (isOwnerName && isOwnerId) {
+    const ownerProfile = {
+      id: 'owner_1',
+      name: 'Himanshu Rupala',
+      email: 'himanshurupala21@gmail.com',
+      phone: '9879004729',
+      role: 'owner',
+      status: 'approved',
+      approvedAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
+    };
+    return res.json({ success: true, profile: ownerProfile });
+  }
+
+  // 2. Check approved profiles
   const profile = userProfiles.find(p => {
     return matchName(p.name, name) && matchIdentifier(p.phone, p.email, identifier);
   });
