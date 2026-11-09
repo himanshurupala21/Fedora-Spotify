@@ -225,33 +225,6 @@ export default function AuthGate() {
                 </p>
               </div>
 
-              {/* Quick Profile Chips if any exist */}
-              {userProfiles.length > 0 && (
-                <div className="space-y-1.5 bg-[#242424]/60 p-2.5 rounded-2xl border border-white/5">
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block text-center">
-                    Saved Profiles on this Device
-                  </span>
-                  <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                    {userProfiles.slice(0, 3).map((prof) => (
-                      <button
-                        key={prof.id || prof.email || prof.phone}
-                        type="button"
-                        onClick={() => {
-                          setLoginName(prof.name);
-                          setLoginIdentifier(prof.phone || prof.email || '');
-                        }}
-                        className="bg-[#2a2a2a] hover:bg-[#333333] border border-white/5 hover:border-[#1db954]/40 py-1 px-2.5 rounded-full text-xs flex items-center gap-1.5 text-zinc-200 transition-all active:scale-95"
-                      >
-                        <div className="w-4 h-4 rounded-full bg-gradient-to-tr from-emerald-500 to-green-400 text-black font-black text-[9px] flex items-center justify-center">
-                          {(prof.name || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <span className="truncate max-w-[110px] font-medium">{prof.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               <form onSubmit={handleLoginSubmit} className="space-y-3.5">
                 {/* Full Name */}
                 <div className="space-y-1">
