@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Disc3, 
   Lock, 
@@ -10,23 +10,40 @@ import {
   Clock, 
   ShieldCheck, 
   ArrowRight, 
-  Sparkles,
-  AlertCircle,
-  LogIn,
-  UserPlus,
-  ChevronLeft
+  Sparkles, 
+  AlertCircle, 
+  LogIn, 
+  UserPlus, 
+  ChevronLeft,
+  Download,
+  Smartphone,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import InstallAppModal from './InstallAppModal';
 
 export default function AuthGate() {
   const { 
     requestAccess, 
-    loginWithProfile,
+    loginWithProfile, 
     verifyAccessCode, 
     adminLogin, 
     pendingRequest,
     userProfiles = []
   } = useAuth();
+
+  // PWA & App Install prompt state
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
 
   // Mode: 'login' | 'form' | 'pending' | 'enter_code' | 'admin'
   const [mode, setMode] = useState(() => {
@@ -156,14 +173,28 @@ export default function AuthGate() {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#1db954]/20 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-emerald-700/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Top Header Logo */}
-      <div className="relative z-10 flex items-center gap-2.5 mt-4 sm:mt-8">
-        <div className="w-10 h-10 rounded-full bg-[#1db954] flex items-center justify-center text-black shadow-lg shadow-green-500/30">
-          <Disc3 className="w-6 h-6 animate-spin-slow" />
+      {/* Top Header Logo & Download App Action */}
+      <div className="relative z-10 flex flex-col items-center gap-2.5 mt-3 sm:mt-6">
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 rounded-full bg-[#1db954] flex items-center justify-center text-black shadow-lg shadow-green-500/30">
+            <Disc3 className="w-6 h-6 animate-spin-slow" />
+          </div>
+          <span className="font-black text-xl sm:text-2xl tracking-tight text-white">
+            Fedora<span className="text-[#1db954]">Spotify</span>
+          </span>
         </div>
-        <span className="font-black text-xl sm:text-2xl tracking-tight text-white">
-          Fedora<span className="text-[#1db954]">Spotify</span>
-        </span>
+
+        {/* Download App Pill Button for Mobile & PC */}
+        <button
+          onClick={() => setIsInstallModalOpen(true)}
+          className="flex items-center gap-2 bg-[#1db954]/15 hover:bg-[#1ed760]/25 border border-[#1db954]/40 hover:border-[#1db954] text-[#1db954] hover:text-white px-4 py-1.5 rounded-full text-xs font-bold shadow-md shadow-green-500/10 backdrop-blur-md transition-all active:scale-95 group cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5 group-hover:scale-110 transition-transform stroke-[2.5]" />
+          <span>Download App for Mobile / PC</span>
+          <span className="bg-[#1db954] text-black text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
+            Free
+          </span>
+        </button>
       </div>
 
       {/* Central Glass Card */}
@@ -278,6 +309,32 @@ export default function AuthGate() {
                 </button>
               </form>
 
+              {/* Download App Mini-Banner */}
+              <div 
+                onClick={() => setIsInstallModalOpen(true)}
+                className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#242424] to-[#1a1a1a] border border-[#1db954]/25 hover:border-[#1db954]/60 cursor-pointer transition-all group active:scale-[0.98] shadow my-1"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#1db954] flex items-center justify-center text-black shadow-md shadow-green-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
+                    <Download className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-xs text-white group-hover:text-[#1db954] transition-colors">
+                        Download Fedora Spotify
+                      </span>
+                      <span className="bg-[#1db954]/20 text-[#1db954] text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">
+                        All Devices
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400">
+                      Install on Android, iPhone, Windows or Mac
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-[#1db954] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              </div>
+
               {/* Bottom Switch Links */}
               <div className="flex flex-col gap-2 pt-2 border-t border-white/5 text-center text-xs text-zinc-400">
                 <button
@@ -379,6 +436,32 @@ export default function AuthGate() {
                   )}
                 </button>
               </form>
+
+              {/* Download App Mini-Banner */}
+              <div 
+                onClick={() => setIsInstallModalOpen(true)}
+                className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#242424] to-[#1a1a1a] border border-[#1db954]/25 hover:border-[#1db954]/60 cursor-pointer transition-all group active:scale-[0.98] shadow my-1"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-[#1db954] flex items-center justify-center text-black shadow-md shadow-green-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
+                    <Download className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <div className="min-w-0 text-left">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-xs text-white group-hover:text-[#1db954] transition-colors">
+                        Download Fedora Spotify
+                      </span>
+                      <span className="bg-[#1db954]/20 text-[#1db954] text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">
+                        All Devices
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400">
+                      Install on Android, iPhone, Windows or Mac
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-[#1db954] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              </div>
 
               {/* Bottom Switch Links */}
               <div className="flex flex-col gap-2 pt-2 border-t border-white/5 text-center text-xs text-zinc-400">
@@ -584,6 +667,13 @@ export default function AuthGate() {
       <footer className="relative z-10 text-[11px] text-zinc-400 text-center py-2">
         Fedora Spotify Private Player • Protected by Access Verification
       </footer>
+
+      {/* Download & Install Application Modal */}
+      <InstallAppModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        deferredPrompt={deferredPrompt}
+      />
     </div>
   );
 }

@@ -1,0 +1,19 @@
+{
+  "name": "Fedora Spotify Music",
+  "short_name": "Fedora Spotify",
+  "description": "High Fidelity Music Player with Cloud Sync and Personal Library",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#1db954",
+  "icons": [
+    {
+      "src": "/spotify-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

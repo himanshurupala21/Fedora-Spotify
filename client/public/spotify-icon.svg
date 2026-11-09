@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1ed760" />
+      <stop offset="100%" stop-color="#128a3e" />
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.3" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Circular Background -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGrad)" filter="url(#shadow)" />
+  <circle cx="256" cy="256" r="240" fill="url(#glowGrad)" />
+
+  <!-- Inner Black Ring accent -->
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#ffffff" stroke-width="2" stroke-opacity="0.2" />
+
+  <!-- Spotify Sound Wave Arcs (Fedora Sound Waves) in deep black -->
+  <g fill="#121212">
+    <!-- Top Arc -->
+    <path d="M 374 182 C 298 138 184 134 118 154 C 107 157 95 151 92 140 C 89 129 95 117 106 114 C 183 91 308 95 396 147 C 406 153 410 167 403 177 C 397 186 384 189 374 182 Z" />
+    
+    <!-- Middle Arc -->
+    <path d="M 358 248 C 295 210 200 198 138 217 C 128 220 117 214 114 204 C 111 194 117 183 127 180 C 200 158 304 171 378 216 C 387 222 390 234 384 243 C 378 252 367 254 358 248 Z" />
+    
+    <!-- Bottom Arc -->
+    <path d="M 342 312 C 289 279 210 269 157 285 C 148 288 138 283 135 274 C 132 265 137 255 146 252 C 208 233 296 245 358 283 C 366 288 369 299 364 307 C 359 315 349 317 342 312 Z" />
+  </g>
+</svg>
