@@ -11,7 +11,9 @@ const OWNER_PROFILE = {
   role: 'owner',
   status: 'approved',
   avatarColor: 'from-emerald-500 to-green-400',
-  approvedAt: '2026-01-01T00:00:00.000Z'
+  approvedAt: '2026-01-01T00:00:00.000Z',
+  favorites: [],
+  playlists: []
 };
 
 const OWNER_EMAIL = 'himanshurupala21@gmail.com';
@@ -254,7 +256,9 @@ export function AuthProvider({ children }) {
       status: 'approved',
       avatarColor: user.avatarColor || 'from-emerald-500 to-green-400',
       approvedAt: user.approvedAt || new Date().toISOString(),
-      lastLoginAt: new Date().toISOString()
+      lastLoginAt: new Date().toISOString(),
+      favorites: Array.isArray(user.favorites) ? user.favorites : [],
+      playlists: Array.isArray(user.playlists) ? user.playlists : []
     };
 
     setIsAuthorized(true);
@@ -292,9 +296,10 @@ export function AuthProvider({ children }) {
     if (isOwnerName && isOwnerId) {
       setIsAdmin(true);
       localStorage.setItem('fedora_is_admin', 'true');
-      grantFullAccess(OWNER_PROFILE);
-      saveCloudProfile(OWNER_PROFILE);
-      return { success: true, profile: OWNER_PROFILE };
+      const existingOwner = userProfiles.find(p => p.role === 'owner' || p.phone === '9879004729') || OWNER_PROFILE;
+      grantFullAccess(existingOwner);
+      saveCloudProfile(existingOwner);
+      return { success: true, profile: existingOwner };
     }
 
     // 2. Check local userProfiles cache
@@ -368,7 +373,9 @@ export function AuthProvider({ children }) {
             role: 'member',
             status: 'approved',
             approvedAt: new Date().toISOString(),
-            lastLoginAt: new Date().toISOString()
+            lastLoginAt: new Date().toISOString(),
+            favorites: Array.isArray(matchedCloudReq.favorites) ? matchedCloudReq.favorites : [],
+            playlists: Array.isArray(matchedCloudReq.playlists) ? matchedCloudReq.playlists : []
           };
           grantFullAccess(approvedProfile);
           saveCloudProfile(approvedProfile);

@@ -653,7 +653,7 @@ app.post('/api/profiles/login', (req, res) => {
 
 // Register / Upsert Approved Profile
 app.post('/api/profiles/register', (req, res) => {
-  const { name, phone, email, role, avatarColor } = req.body;
+  const { name, phone, email, role, avatarColor, favorites, playlists } = req.body;
   if (!name || (!phone && !email)) {
     return res.status(400).json({ error: 'Name and Phone/Email required' });
   }
@@ -663,13 +663,15 @@ app.post('/api/profiles/register', (req, res) => {
 
   let existing = userProfiles.find(p => 
     (cleanEmail && p.email && p.email.toLowerCase() === cleanEmail) ||
-    (cleanPhone && cleanIdentifier(p.phone) === cleanIdentifier(cleanPhone))
+    (cleanPhone && matchPhone(p.phone, cleanPhone))
   );
 
   if (existing) {
     existing.name = name.trim();
     if (cleanPhone) existing.phone = cleanPhone;
     if (cleanEmail) existing.email = cleanEmail;
+    if (favorites) existing.favorites = favorites;
+    if (playlists) existing.playlists = playlists;
     existing.status = 'approved';
     existing.lastLoginAt = new Date().toISOString();
   } else {
@@ -682,7 +684,9 @@ app.post('/api/profiles/register', (req, res) => {
       status: 'approved',
       avatarColor: avatarColor || 'from-emerald-500 to-green-400',
       approvedAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString()
+      lastLoginAt: new Date().toISOString(),
+      favorites: favorites || [],
+      playlists: playlists || []
     };
     userProfiles.push(existing);
   }
